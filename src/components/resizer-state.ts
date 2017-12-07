@@ -20,29 +20,29 @@ const rotatePoint = function(rotation: number, point: Point, center: Point): Poi
   return unRotatePoint(-rotation, point, center);
 };
 
-const fromP1P3 = function(p1: Point, p3: Point): Rect {
+const fromP1P3 = function(p1: Point, p3: Point, proportion): Rect {
   const left =  Math.min(p1.left, p3.left);
   const top = Math.min(p1.top, p3.top);
   const width = Math.abs(p1.left - p3.left);
-  const height = Math.abs(p1.top - p3.top);
+  const height = proportion ? (width / proportion) : Math.abs(p1.top - p3.top);
 
   return {
     left, top, width, height
   };
 };
 
-const fromP1P3WithRotation = function(p1: Point, p3: Point, rotation: number = 0): Rect {
+const fromP1P3WithRotation = function(p1: Point, p3: Point, rotation: number = 0, proportion): Rect {
   const center = {
     left: (p1.left + p3.left) / 2,
     top: (p1.top + p3.top) / 2
   };
 
-  return fromP1P3(unRotatePoint(rotation, p1, center), unRotatePoint(rotation, p3, center));
+  return fromP1P3(unRotatePoint(rotation, p1, center), unRotatePoint(rotation, p3, center), proportion);
 };
 
-const fromP2P4 = function (p2: Point, p4: Point) {
+const fromP2P4 = function (p2: Point, p4: Point, proportion) {
   const width = Math.abs(p4.left - p2.left);
-  const height = Math.abs(p4.top - p2.top);
+  const height = proportion ? (width / proportion) : Math.abs(p4.top - p2.top);
 
   const left = Math.max(p2.left, p4.left) - width;
   const top = Math.min(p2.top, p4.top);
@@ -55,13 +55,13 @@ const fromP2P4 = function (p2: Point, p4: Point) {
   };
 };
 
-const fromP2P4WithRotation = function(p2: Point, p4: Point, rotation: number = 0): Rect {
+const fromP2P4WithRotation = function(p2: Point, p4: Point, rotation: number = 0, proportion): Rect {
   const center = {
     left: (p2.left + p4.left) / 2,
     top: (p2.top + p4.top) / 2
   };
 
-  return fromP2P4(unRotatePoint(rotation, p2, center), unRotatePoint(rotation, p4, center));
+  return fromP2P4(unRotatePoint(rotation, p2, center), unRotatePoint(rotation, p4, center), proportion);
 };
 
 const fromC12C34WithRotation = function(c12: Point, c34: Point, rotation: number, width: number) {
@@ -140,9 +140,11 @@ export default class Rectangle {
   public width: number;
   public height: number;
   public rotation: number = 0;
+  public fixedProportion: boolean;
 
-  constructor(rect?: Rect, rotation?: number) {
+  constructor(rect?: Rect, rotation?: number, fixedProportion?: boolean) {
     this.rotation = rotation;
+    this.fixedProportion = fixedProportion;
     if (rect) {
       const { left, top, width, height } = rect;
       this.left = left;
@@ -171,7 +173,7 @@ export default class Rectangle {
       left: null,
       top: null
     };
-
+    
     switch (type) {
       case 'nw':
       case 'ne':
@@ -233,7 +235,7 @@ export default class Rectangle {
       p2.left += deltaX;
       p2.top += deltaY;
 
-      return fromP1P3WithRotation(p1, p2, this.rotation);
+      return fromP1P3WithRotation(p1, p2, this.rotation, null);
     }
   }
 
@@ -244,7 +246,7 @@ export default class Rectangle {
     this.height = rect.height;
   }
 
-  dragPoint(type: string, deltaX: number = 0, deltaY: number = 0, startPoint: Point): Rect {
+  dragPoint(type: string, deltaX: number = 0, deltaY: number = 0, startPoint: Point, startSize): Rect {
     const transformMap = TRANSFORM_MAP[type];
 
     let p1 = this.getPoint('nw');
@@ -252,6 +254,8 @@ export default class Rectangle {
 
     const rotated = this.rotated;
     const rotation = this.rotation;
+    const fixedProportion = this.fixedProportion;
+    const proportion = fixedProportion ? (startSize.height ? startSize.width / startSize.height : 0) : null;
 
     if (rotated) {
       if (type === 's' || type === 'n') {
@@ -288,6 +292,21 @@ export default class Rectangle {
         return fromC14C23WithRotation(c14, c23, rotation, this.height);
       }
 
+      if (type === 'nw' || type === 'se') {
+        const p1 = this.getPoint('nw');
+        const p3 = this.getPoint('se');
+
+        if (type === 'nw') {
+          p1.left = startPoint.left + deltaX;
+          p1.top = startPoint.top + deltaY;
+        } else if (type === 'se') {
+          p3.left = startPoint.left + deltaX;
+          p3.top = startPoint.top + deltaY;
+        }
+
+        return fromP1P3WithRotation(p1, p3, rotation, proportion);
+      }
+
       if (type === 'ne' || type === 'sw') {
         const p2 = this.getPoint('ne');
         const p4 = this.getPoint('sw');
@@ -300,26 +319,61 @@ export default class Rectangle {
           p4.top = startPoint.top + deltaY;
         }
 
-        return fromP2P4WithRotation(p2, p4, rotation);
+        return fromP2P4WithRotation(p2, p4, rotation, proportion);
       }
     }
 
-    if (transformMap.p1x) {
-      p1.left = startPoint.left + deltaX;
+    if (fixedProportion) {
+      switch (type) {
+        case 'n':
+          p1.top = startPoint.top + deltaY;
+          break;
+        case 'e':
+          p3.left = startPoint.left + deltaX;
+          break;
+        case 's':
+          p3.top = startPoint.top + deltaY;
+          break;
+        case 'w':
+          p1.left = startPoint.left + deltaX;
+          break;
+        case 'nw':
+          p1.left = startPoint.left + deltaX;
+          p1.top = startPoint.top + deltaX / proportion;
+          break;
+        case 'ne':
+          p3.left = startPoint.left + deltaX;
+          p1.top = startPoint.top - deltaX / proportion;
+          break;
+        case 'se':
+          p3.left = startPoint.left + deltaX;
+          p3.top = startPoint.top + deltaX / proportion;
+          break;
+        case 'sw':
+          p1.left = startPoint.left + deltaX;
+          p3.top = startPoint.top - deltaX / proportion;
+          break;
+        default:
+          break;
+      }
+    } else {
+      if (transformMap.p1x) {
+        p1.left = startPoint.left + deltaX;
+      }
+  
+      if (transformMap.p3x) {
+        p3.left = startPoint.left + deltaX;
+      }
+  
+      if (transformMap.p1y) {
+        p1.top = startPoint.top + deltaY;
+      }
+  
+      if (transformMap.p3y) {
+        p3.top = startPoint.top + deltaY;
+      }
     }
 
-    if (transformMap.p3x) {
-      p3.left = startPoint.left + deltaX;
-    }
-
-    if (transformMap.p1y) {
-      p1.top = startPoint.top + deltaY;
-    }
-
-    if (transformMap.p3y) {
-      p3.top = startPoint.top + deltaY;
-    }
-
-    return fromP1P3WithRotation(p1, p3, rotation);
+    return fromP1P3WithRotation(p1, p3, rotation, null);
   }
 };

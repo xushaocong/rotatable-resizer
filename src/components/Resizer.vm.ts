@@ -43,6 +43,10 @@ export default {
     },
     rotation: {
       type: Number
+    },
+    fixedProportion: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -52,7 +56,7 @@ export default {
       top: this.top,
       width: this.width,
       height: this.height
-    }, this.rotation);
+    }, this.rotation, this.fixedProportion);
 
     return {
       state,
@@ -213,6 +217,7 @@ export default {
 
       let resizeState: any = {};
       let startPoint;
+      let startSize = {};
 
       draggable(handle, {
         start(event: MouseEvent) {
@@ -220,6 +225,10 @@ export default {
           resizeState.startX = event.clientX;
           resizeState.startY = event.clientY;
           startPoint = self.state.getPoint(<PointType>type);
+          startSize = {
+            width: self.state.width,
+            height: self.state.height
+          };
           self.dragging = true;
           self.emitBeforeInputEvent();
         },
@@ -227,7 +236,7 @@ export default {
           const deltaX = event.clientX - resizeState.startX;
           const deltaY = event.clientY - resizeState.startY;
 
-          const rect = self.state.dragPoint(type, deltaX, deltaY, startPoint);
+          const rect = self.state.dragPoint(type, deltaX, deltaY, startPoint, startSize);
           resizeState.rect = rect;
 
           rect.rotation = self.state.rotation;

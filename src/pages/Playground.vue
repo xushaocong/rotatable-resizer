@@ -74,6 +74,7 @@
         :disabled="disabled"
         :handles="handles"
         :rotation="degree"
+        :fixedProportion="fixedProportion"
         @change="handleChange"
         :left="left"
         :top="top"
