@@ -19,7 +19,8 @@ export default class Hello extends Vue {
   rotatable: boolean = true;
   disabled: boolean = false;
   active: boolean = true;
-  fixedProportion: boolean = false;
+  fixedRatio: boolean = false;
+  autoHeight: boolean = true;
 
   handleChange(state: Rect) {
     this.left = state.left;

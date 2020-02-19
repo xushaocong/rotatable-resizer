@@ -74,13 +74,15 @@
         :disabled="disabled"
         :handles="handles"
         :rotation="degree"
-        :fixedProportion="fixedProportion"
+        :fixedRatio="fixedRatio"
         @change="handleChange"
         :left="left"
         :top="top"
         :width="width"
-        :height="height">
-        Slot Content
+        :height="height"
+        :autoHeight="autoHeight">
+        <div style="height: 100px">123clc</div>
+        <div style="height: 100px">12c</div>
       </resizer>
     </div>
 

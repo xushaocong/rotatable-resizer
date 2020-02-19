@@ -140,11 +140,14 @@ export default class Rectangle {
   public width: number;
   public height: number;
   public rotation: number = 0;
-  public fixedProportion: boolean;
+  public fixedRatio: boolean;
+  public autoHeight: boolean;
 
-  constructor(rect?: Rect, rotation?: number, fixedProportion?: boolean) {
+  constructor(rect?: Rect, rotation?: number, fixedRatio?: boolean, autoHeight?: boolean) {
     this.rotation = rotation;
-    this.fixedProportion = fixedProportion;
+    this.fixedRatio = fixedRatio;
+    this.autoHeight = autoHeight;
+
     if (rect) {
       const { left, top, width, height } = rect;
       this.left = left;
@@ -254,8 +257,8 @@ export default class Rectangle {
 
     const rotated = this.rotated;
     const rotation = this.rotation;
-    const fixedProportion = this.fixedProportion;
-    const proportion = fixedProportion ? (startSize.height ? startSize.width / startSize.height : 0) : null;
+    const fixedRatio = this.fixedRatio;
+    const proportion = fixedRatio ? (startSize.height ? startSize.width / startSize.height : 0) : null;
 
     if (rotated) {
       if (type === 's' || type === 'n') {
@@ -323,7 +326,7 @@ export default class Rectangle {
       }
     }
 
-    if (fixedProportion) {
+    if (fixedRatio) {
       switch (type) {
         case 'n':
           p1.top = startPoint.top + deltaY;

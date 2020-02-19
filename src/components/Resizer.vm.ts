@@ -44,9 +44,13 @@ export default {
     rotation: {
       type: Number
     },
-    fixedProportion: {
+    fixedRatio: {
       type: Boolean,
       default: false
+    },
+    autoHeight: {
+      type: Boolean,
+      default: false,
     }
   },
 
@@ -56,7 +60,7 @@ export default {
       top: this.top,
       width: this.width,
       height: this.height
-    }, this.rotation, this.fixedProportion);
+    }, this.rotation, this.fixedRatio, this.autoHeight);
 
     return {
       state,
@@ -181,7 +185,7 @@ export default {
           dom.style.left = rect.left + 'px';
           dom.style.top = rect.top + 'px';
           dom.style.width = rect.width + 'px';
-          dom.style.height = rect.height + 'px';
+          dom.style.height = self.autoHeight ? 'auto' : rect.height + 'px';
         },
         end() {
           if (dragState.rect) {
@@ -249,7 +253,7 @@ export default {
 
           if (rect.width !== undefined) {
             el.style.width = rect.width + 'px';
-            el.style.height = rect.height + 'px';
+            el.style.height = self.autoHeight ? 'auto' : rect.height + 'px';
           }
         },
         end() {
