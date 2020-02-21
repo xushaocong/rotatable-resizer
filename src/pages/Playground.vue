@@ -4,6 +4,13 @@
       <div class="form-header">Options</div>
       <form class="form-horizontal">
         <div class="form-group">
+          <label class="form-label col-5" for="input-example-1">AutoHeight</label>
+          <label class="form-checkbox col-7">
+            <input type="checkbox" v-model="autoHeight">
+            <i class="form-icon"></i>
+          </label>
+        </div>
+        <div class="form-group">
           <label class="form-label col-5" for="input-example-1">Rotatable</label>
           <label class="form-checkbox col-7">
             <input type="checkbox" v-model="rotatable">

@@ -113,6 +113,16 @@ export default {
     }
   },
 
+  watch: {
+    autoHeight(v) {
+      const dom = this.$el;
+      if (v) {
+        dom.style.height = 'auto';
+      } else {
+        dom.style.height = this.state.height + 'px';
+      }
+    }
+  },
   methods: {
     emitInputEvent(rect: Rect) {
       this.$emit('input', rect);
